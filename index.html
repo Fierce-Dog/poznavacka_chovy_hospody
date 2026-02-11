@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nekonečná Poznávačka</title>
+    <style>
+        :root { --primary: #4a90e2; --success: #2ecc71; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
+        img { 
+			width: 100%; 
+			height: 300px; /* Můžete zvětšit na 350px nebo 400px podle potřeby */
+			border-radius: 15px; 
+			object-fit: contain; /* TATO ZMĚNA zajistí, že bude vidět celý obrázek */
+			margin-bottom: 1rem; 
+			background: #fdfdfd; /* Jemné pozadí, kdyby byl obrázek úzký */
+		}
+        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; margin-top: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        #msg { margin-top: 15px; font-weight: bold; min-height: 20px; }
+        #info { color: gray; font-size: 0.8rem; margin-top: 10px; }
+		.card { 
+			display: flex; 
+			flex-direction: column; 
+			gap: 10px; /* Vytvoří stejné mezery mezi prvky */
+		}
+		#msg { 
+			margin: 0; 
+			padding: 10px 0;
+			order: 1; /* Zpráva bude úplně nahoře */
+		}
+		#info { 
+			order: 2; /* Info o pokusech bude pod zprávou */
+		}
+		#pic { 
+			order: 3; /* Obrázek pod info texty */
+		}
+		#input-area {
+			order: 4; /* Vstupní pole a tlačítko úplně dole */
+		}
+        .back-link {
+            display: block; /* Zajistí, že odkaz zabere celou šířku a umožní zarovnání */
+            text-align: left; /* Tlačí text odkazu doleva */
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #888;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <a href="https://fierce-dog.github.io/poznavacky_linktree/" class="back-link">⬅ Zpět na rozcestí</a>
+    <p id="msg">Máš 3 pokusy</p>
+    <p id="info"></p>
+    <img id="pic" src="" alt="Načítám...">
+    <div id="input-area">
+        <input type="text" id="guess" placeholder="Co je na obrázku?" autocomplete="off" onkeypress="if(event.key === 'Enter') check()">
+        <button onclick="check()">Odeslat</button>
+    </div>
+</div>
+
+<script>
+    // --- VAŠE DATA ---
+    const items = [
+	{ file: "aberdeen_angus.jpg", name: "Aberdeen Angus" },
+    { file: "arabsky_plnokrevnik.jpg", name: "Arabský plnokrevník" },
+    { file: "awassi.jpg", name: "Awassi" },
+    { file: "belgicke_modre.jpg", name: "Belgické modré" },
+    { file: "brahmanka.jpg", name: "Brahmánka" },
+    { file: "ceska_cervninka.jpg", name: "Česká červinka" },
+    { file: "ceske_bile_uslechtile.jpg", name: "České bílé ušlechtilé" },
+    { file: "ceskomoravsky_belgicky_kun.jpg", name: "Českomoravský belgický kůň" },
+    { file: "cesky_strakac.jpg", name: "Český strakáč" },
+    { file: "cesky_strakaty_skot.jpg", name: "Český strakatý skot" },
+    { file: "duroc.jpg", name: "Duroc" },
+    { file: "galloway.jpg", name: "Galloway" },
+    { file: "gascone.jpg", name: "Gascone" },
+    { file: "hafling.jpg", name: "Hafling" },
+    { file: "hampshire.jpg", name: "Hampshire" },
+    { file: "hedvabnicka.jpg", name: "Hedvábnička" },
+    { file: "highland.jpg", name: "Highland" },
+    { file: "holstyn.jpg", name: "Holštýn" },
+    { file: "hucul.jpg", name: "Hucul" },
+    { file: "indicky_bezec.jpg", name: "Indický běžec" },
+    { file: "jersey.jpg", name: "Jersey" },
+    { file: "kun_andalusky.jpg", name: "Kůň andaluský" },
+    { file: "kun_starokladrubsky.jpg", name: "Kůň starokladrubský" },
+    { file: "landrace.jpg", name: "Landrace" },
+    { file: "lipican.jpg", name: "Lipican" },
+    { file: "mangalica.jpg", name: "Mangalica" },
+    { file: "merinolandschaf.jpg", name: "Merinolandschaf" },
+    { file: "moravsky_bily_hnedooky.jpg", name: "Moravský bílý hnědooký" },
+    { file: "moravsky_modry.jpg", name: "Moravský modrý" },
+    { file: "ovce_anglonubijska.jpg", name: "Ovce anglonúbijská" },
+    { file: "ovce_bila_kratkosrsta.jpg", name: "Ovce bílá krátkosrstá" },
+    { file: "ovce_hneda_kratkosrsta.jpg", name: "Ovce hnědá krátkosrstá" },
+    { file: "ovce_jakobova.jpg", name: "Ovce Jákobova" },
+    { file: "ovce_kasmirova.jpg", name: "Ovce kašmírová" },
+    { file: "ovce_romanovska.jpg", name: "Ovce romanovská" },
+    { file: "oxford_down.jpg", name: "Oxford Down" },
+    { file: "peitrain.jpg", name: "Peitrain" },
+    { file: "percheron.jpg", name: "Percheron" },
+    { file: "piemontese.jpg", name: "Piemontese" },
+    { file: "presticke_cernostrakate.jpg", name: "Přeštické černostrakaté" },
+    { file: "shetlandsky_pony.jpg", name: "Shetlandský pony" },
+    { file: "slezky_norik.jpg", name: "Slezský norik" },
+    { file: "suffolk.jpg", name: "Suffolk" },
+    { file: "texel.jpg", name: "Texel" },
+	{ file: "valaska.jpg", name: "Valaška" }
+    ];
+
+    let current;
+    let attempts = 0;
+    let pool = []; // Aktuální balíček pro dané kolo
+
+	function next() {
+        const msgField = document.getElementById("msg");
+        const infoField = document.getElementById("info");
+        
+        // Reset hlášek nad obrázkem
+        msgField.innerText = "Poznej obrázek";
+        msgField.style.color = "gray";
+        msgField.style.fontSize = "18px";
+        msgField.style.fontWeight = "normal";
+
+        if (pool.length === 0) {
+            pool = [...items];
+            msgField.innerText = "Začínáme nové kolo!";
+            msgField.style.color = "blue";
+        }
+
+        const idx = Math.floor(Math.random() * pool.length);
+        current = pool[idx];
+        
+        document.getElementById("pic").src = current.file;
+        document.getElementById("guess").value = "";
+        document.getElementById("guess").disabled = false;
+        document.getElementById("guess").focus();
+        attempts = 0;
+        updateInfo();
+    }
+
+    function updateInfo() {
+        document.getElementById("info").innerText = `Zbývá v kole: ${pool.length} | Pokus: ${attempts + 1}/3`;
+        document.getElementById("info").style.color = "#666";
+    }
+
+    function check() {
+        const inputField = document.getElementById("guess");
+        const msgField = document.getElementById("msg");
+        const val = inputField.value.trim().toLowerCase();
+        const ans = current.name.toLowerCase();
+
+        if (val === "" || inputField.disabled) return;
+
+        if (val === ans) {
+            msgField.innerText = "✓ Výborně, to je ono!";
+            msgField.style.color = "green";
+            inputField.disabled = true;
+            
+            pool = pool.filter(i => i !== current);
+            setTimeout(next, 1500);
+        } else {
+            attempts++;
+            if (attempts < 3) {
+                msgField.innerText = `✗ Špatně, zkus to znovu!`;
+                msgField.style.color = "orange";
+                inputField.value = "";
+                inputField.focus();
+                updateInfo();
+            } else {
+                msgField.innerHTML = `Bohužel. Správně bylo:<br><span style="font-size: 28px;">${current.name}</span>`;
+                msgField.style.color = "red";
+                msgField.style.fontWeight = "bold";
+                inputField.disabled = true;
+                
+                pool = pool.filter(i => i !== current);
+                setTimeout(next, 5000);
+            }
+        }
+    }
+
+    // Spuštění
+    next();
+</script>
+</body>
+</html>
